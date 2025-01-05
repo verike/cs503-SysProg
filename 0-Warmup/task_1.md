@@ -8,15 +8,19 @@
      [ ] VMWare Fusion
      [ ] Somthing else (put name here)
 
-    ## I have installed my virtual machine, tested it, feel comfortable using it, and  validated that the required software is installed:
+    2. I have installed my virtual machine, tested it, feel comfortable using it, and  validated that the required software is installed:
 
      [x] YES
      [ ] N/A - I plan to use tux
      [ ] NO - Not Yet
 
-    ## Please provide a link to the repository you are using for this class.
-    [Link to Repository]()
+    3. Please provide a link to the repository you are using for this class.
+    Link to repository: [text](https://github.com/verike/cs503-SysProg/blob/main/0-Warmup/task_1.md)
 
-    ## Briefly describe what you want to get out of this class.
+    4. Briefly describe what you want to get out of this class.
+    
+    "If expanding scope and spectrum of knowledge, and creative implementation of skills acquired is an advancement milestone", then that's my over-arching goal in this class. 
 
-    ## Briefly describe any concerns you might be having with being successful in this class   (if any).
+    5. Briefly describe any concerns you might be having with being successful in this class   (if any).
+
+    "N/A".
