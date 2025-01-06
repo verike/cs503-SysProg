@@ -1,4 +1,4 @@
-# Answers to Questions
+#### Answers to Questions
     
     1. Select with an x the platform you will be using for your course deliverables:
 
@@ -15,7 +15,7 @@
      [ ] NO - Not Yet
 
     3. Please provide a link to the repository you are using for this class.
-    Link to repository: [text](https://github.com/verike/cs503-SysProg/blob/main/0-Warmup/task_1.md)
+    [Link to repository](https://github.com/verike/cs503-SysProg/blob/main/0-Warmup/task_1.md)
 
     4. Briefly describe what you want to get out of this class.
     
