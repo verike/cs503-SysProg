@@ -1,6 +1,6 @@
 #### Answers to Questions
     
-    1. Select with an `x the platform you will be using for your course deliverables:
+    1. Select with an `x` the platform you will be using for your course deliverables:
 
     - [ ] drexel's tux cluster
     - [x] WSL on Windows
