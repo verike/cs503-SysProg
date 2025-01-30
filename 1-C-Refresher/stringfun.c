@@ -51,9 +51,9 @@ int count_words(char *str)
 
     // Please implement
     len = strlen(str);
-    for (wc = 0; wc < len; wc++)
+    for (int i = 0; i < len; i++)
     {
-        char current = str[wc];
+        char current = str[i];
         if (word_start == false)
         {
             if (current != SPACE_CHAR)
