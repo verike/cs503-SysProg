@@ -165,33 +165,29 @@ void word_print(char *str)
     len = strlen(str);
     last_char_idx = len - 1;
 
-    for (wc = 0; wc <= len; wc++)
+    for (int i = 0; i < len; i++)
     {
-        char current = str[wc];
-        if (word_start == false)
+        char current = str[i];
+
+        if (word_start == false && current != SPACE_CHAR)
         {
-            if (current == SPACE_CHAR)
-            {
-                continue;
-            }
-            else
-            {
-                wc++;
-                word_start = true;
-                wlen = 0;
-                printf("%d.  ", wc);
-            }
+            wc++; // Increment word count
+            wlen = 0;
+            word_start = true;
+            printf("%d.  ", wc);
         }
-        else
+
+        if (word_start)
         {
-            if ((current == SPACE_CHAR) || (wc == last_char_idx))
+            if (current != SPACE_CHAR)
             {
-                printf("%d. ", wlen);
-                word_start = false;
-                wlen = 0;
-            }else {
-                printf("%c", current);  // Print character
+                printf("%c", current); // Print characters of the word
                 wlen++;
+            }
+            if ((i == last_char_idx) || (str[i + 1] == SPACE_CHAR))
+            {
+                printf(" (%d)\n", wlen);
+                word_start = false;
             }
         }
     }
@@ -285,6 +281,6 @@ int main(int argc, char *argv[])
     // TODO: #7. Why did we place a break statement on each case
     //           option, and did not place one on default.  What
     //           would happen if we forgot the break statement?
-    
+
     // Answer: The break gives scope to the test of each case to avoid unexpected execution.
 }
