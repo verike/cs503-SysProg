@@ -102,7 +102,7 @@ void reverse_string(char *str)
 
     // Please implement
     start_idx = 0;
-    end_idx = strlen(str - 1);
+    end_idx = strlen(str) -1;
 
     while (end_idx > start_idx)
     {
@@ -114,7 +114,7 @@ void reverse_string(char *str)
         end_idx--;
     }
 
-    // return;
+
 }
 
 // word_print() - algorithm
