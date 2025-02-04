@@ -211,9 +211,7 @@ int del_student(int fd, int id)
 
     printf(M_STD_DEL_MSG, id);
     return NO_ERROR;
-
-    }
-
+}
 
 /*
  *  count_db_records
@@ -241,7 +239,7 @@ int del_student(int fd, int id)
  */
 int count_db_records(int fd)
 {
-student_t student;
+    student_t student;
     student_t empty = {0};
     int count = 0;
 
@@ -451,8 +449,60 @@ void print_student(student_t *s)
  */
 int compress_db(int fd)
 {
-    printf(M_NOT_IMPL);
-    return fd;
+    student_t student;
+    student_t empty = {0};
+
+    // Create a temporary database file
+    int temp_fd = open(TMP_DB_FILE, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+    if (temp_fd == -1)
+    {
+        printf(M_ERR_DB_OPEN);
+        return ERR_DB_FILE;
+    }
+
+    // Reset file offset to the beginning
+    if (lseek(fd, 0, SEEK_SET) == -1)
+    {
+        printf(M_ERR_DB_READ);
+        close(temp_fd);
+        return ERR_DB_FILE;
+    }
+
+    // Copy only valid student records
+    while (read(fd, &student, sizeof(student_t)) == sizeof(student_t))
+    {
+        if (memcmp(&student, &empty, sizeof(student_t)) != 0)
+        {
+            if (write(temp_fd, &student, sizeof(student_t)) != sizeof(student_t))
+            {
+                printf(M_ERR_DB_WRITE);
+                close(temp_fd);
+                return ERR_DB_FILE;
+            }
+        }
+    }
+
+    // Close files
+    close(fd);
+    close(temp_fd);
+
+    // Replace the original database with the compressed one
+    if (remove(DB_FILE) != 0 || rename(TMP_DB_FILE, DB_FILE) != 0)
+    {
+        printf(M_ERR_DB_CREATE);
+        return ERR_DB_FILE;
+    }
+
+    // Reopen the compressed database and return the new file descriptor
+    int new_fd = open(DB_FILE, O_RDWR);
+    if (new_fd == -1)
+    {
+        printf(M_ERR_DB_OPEN);
+        return ERR_DB_FILE;
+    }
+
+    printf(M_DB_COMPRESSED_OK);
+    return new_fd;
 }
 
 /*
