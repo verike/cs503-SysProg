@@ -26,7 +26,7 @@ int setup_buff(char *buff, char *user_str, int len)
         i++;
     }
     buff[i] = '\0'; // Null-terminate
-    // return i;
+    return i;
     return 0; // for now just so the code compiles.
 }
 
