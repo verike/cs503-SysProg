@@ -58,97 +58,109 @@ int exec_local_cmd_loop()
     int rc = 0;
     cmd_buff_t cmd;
 
-    // TODO IMPLEMENT MAIN LOOP
-
-    // TODO IMPLEMENT parsing input to cmd_buff_t *cmd_buff
-
     cmd_buff = malloc(SH_CMD_MAX);
-    if (!cmd_buff) {
+    if (!cmd_buff)
+    {
         perror("Memory allocation failed");
         return ERR_MEMORY;
     }
-        while (1)
+    while (1)
+    {
+        printf("%s", SH_PROMPT);
+        if (fgets(cmd_buff, SH_CMD_MAX, stdin) == NULL)
         {
-            printf("%s", SH_PROMPT);
-            if (fgets(cmd_buff, ARG_MAX, stdin) == NULL)
-            {
-                printf("\n");
-                break;
-            }
-            cmd_buff[strcspn(cmd_buff, "\n")] = '\0';
+            printf("\n");
+            break;
+        }
+        cmd_buff[strcspn(cmd_buff, "\n")] = '\0';
 
-            if (build_cmd_buff(cmd_buff, &cmd) != OK)
-            {
-                printf(CMD_WARN_NO_CMD);
-                continue;
-            }
-
-            if (cmd.argc == 0)
-                continue;
-
-            if (strcmp(cmd.argv[0], EXIT_CMD) == 0)
-                break;
-            if (strcmp(cmd.argv[0], "cd") == 0)
-            {
-                dsh_cd(cmd.argv[1]);
-                continue;
-            }
-            if (strcmp(cmd.argv[0], "rc") == 0)
-            {
-                printf("%d\n", rc);
-                continue;
-            }
-
-            pid_t pid = fork();
-            if (pid == 0)
-            {
-                execvp(cmd.argv[0], cmd.argv);
-                perror("Execution failed");
-                exit(ERR_CMD_OR_ARGS_TOO_BIG);
-            }
-            else if (pid > 0)
-            {
-                int status;
-                waitpid(pid, &status, 0);
-                rc = WEXITSTATUS(status);
-            }
-            else
-            {
-                perror("Fork failed");
-            }
+        if (build_cmd_buff(cmd_buff, &cmd) != OK)
+        {
+            printf(CMD_WARN_NO_CMD);
+            continue;
         }
 
-        // TODO IMPLEMENT if built-in command, execute builtin logic for exit, cd (extra credit: dragon)
-        // the cd command should chdir to the provided directory; if no directory is provided, do nothing
+        if (cmd.argc == 0)
+            continue;
 
-        // TODO IMPLEMENT if not built-in command, fork/exec as an external command
-        // for example, if the user input is "ls -l", you would fork/exec the command "ls" with the arg "-l"
-        free(cmd_buff);
-        return OK;
-    }
-    void dsh_cd(char *path)
-    {
-        if (path == NULL)
-            return;
-        if (chdir(path) != 0)
-            perror("cd failed");
-    }
-
-    int build_cmd_buff(char *cmd_line, cmd_buff_t *cmd)
-    {
-        char *token;
-        cmd->argc = 0;
-
-        token = strtok(cmd_line, " ");
-        while (token != NULL) {
-            if (token[0] == '"') {
-                token++;
-                char *end = strrchr(token, '"');
-                if (end) *end = '\0';
-            }
-            cmd->argv[cmd->argc++] = strdup(token);
-            token = strtok(NULL, " ");
+        if (strcmp(cmd.argv[0], EXIT_CMD) == 0)
+            break;
+        if (strcmp(cmd.argv[0], "cd") == 0)
+        {
+            dsh_cd(cmd.argv[1]);
+            continue;
         }
-        cmd->argv[cmd->argc] = NULL;
-        return (cmd->argc > 0) ? OK : WARN_NO_CMDS;
+        if (strcmp(cmd.argv[0], "rc") == 0)
+        {
+            printf("%d\n", rc);
+            continue;
+        }
+
+        pid_t pid = fork();
+        if (pid == 0)
+        {
+            execvp(cmd.argv[0], cmd.argv);
+            fprintf(stderr, "error: command not found\n");
+            exit(ERR_EXEC_CMD);
+        }
+        else if (pid > 0)
+        {
+            int status;
+            waitpid(pid, &status, 0);
+            // rc = WEXITSTATUS(status);
+            if (WIFEXITED(status) && WEXITSTATUS(status) != 0)
+            {
+                fprintf(stderr, "error: command exited with status %d\n", WEXITSTATUS(status));
+            }
+        }
+        else
+        {
+            perror("Fork failed");
+        }
     }
+
+    free(cmd_buff);
+    return OK;
+}
+void dsh_cd(char *path)
+{
+    if (path == NULL || strlen(path) == 0)
+        return;
+    if (chdir(path) != 0)
+        perror("cd failed");
+}
+
+int build_cmd_buff(char *cmd_line, cmd_buff_t *cmd)
+{
+    // char *token;
+    cmd->argc = 0;
+
+    char *token = strtok(cmd_line, " ");
+    while (token != NULL)
+    {
+        if (token[0] == '"')
+        {
+            token++;
+            char *end = token + strlen(token) - 1;
+            size_t len = strlen(token);
+            if (len > 0 && token[len - 1] == '"')
+                token[len - 1] = '\0';
+            if (*end == '"')
+                *end = '\0';
+        }
+
+        // Remove extra spaces from token
+        while (isspace((unsigned char)*token))
+            token++;
+        char *end = token + strlen(token) - 1;
+        while (end > token && isspace((unsigned char)*end))
+            end--;
+        *(end + 1) = '\0';
+
+        cmd->argv[cmd->argc++] = strdup(token);
+        token = strtok(NULL, " ");
+    }
+
+    cmd->argv[cmd->argc] = NULL;
+    return (cmd->argc > 0) ? OK : WARN_NO_CMDS;
+}
