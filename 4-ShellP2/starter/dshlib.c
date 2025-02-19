@@ -100,8 +100,8 @@ int exec_local_cmd_loop()
         if (pid == 0)
         {
             execvp(cmd.argv[0], cmd.argv);
-            fprintf(stderr, "error: command not found\n");
-            exit(ERR_EXEC_CMD);
+            fprintf(stderr, "error");
+            exit(127);
         }
         else if (pid > 0)
         {

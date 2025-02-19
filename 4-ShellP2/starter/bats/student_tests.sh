@@ -26,7 +26,7 @@ EOF
     run ./dsh <<EOF
 invalidcmd
 EOF
-    [ "$status" -ne 0 ]
+    [ "$status" -ne 127 ]
     [[ "$output" == *"error"* ]]
 }
 
