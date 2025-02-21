@@ -5,7 +5,7 @@ Please answer the following questions and submit in your repo for the second ass
 
 1. In this assignment I asked you provide an implementation for the `get_student(...)` function because I think it improves the overall design of the database application.   After you implemented your solution do you agree that externalizing `get_student(...)` into it's own function is a good design strategy?  Briefly describe why or why not.
 
-    > **Answer**:  _start here_
+    > **Answer**: Yes, externalizing get_student(...) as its own function is a good design strategy. It improves code modular features, enhances reusability, and maintains a clear separation of concerns. By isolating the function, we make database retrieval operations simpler and reduce code duplication.
 
 2. Another interesting aspect of the `get_student(...)` function is how its function prototype requires the caller to provide the storage for the `student_t` structure:
 
@@ -39,7 +39,7 @@ Please answer the following questions and submit in your repo for the second ass
     ```
     Can you think of any reason why the above implementation would be a **very bad idea** using the C programming language?  Specifically, address why the above code introduces a subtle bug that could be hard to identify at runtime? 
 
-    > **ANSWER:** _start here_
+    > **ANSWER:** This implementation returns a pointer to a local variable (student_t student). Since student is allocated on the stack, it becomes invalid once the function returns, leading to undefined behavior when accessed by the caller. This bug is hard to detect at runtime and can cause unpredictable issues.
 
 3. Another way the `get_student(...)` function could be implemented is as follows:
 
@@ -72,7 +72,7 @@ Please answer the following questions and submit in your repo for the second ass
     ```
     In this implementation the storage for the student record is allocated on the heap using `malloc()` and passed back to the caller when the function returns. What do you think about this alternative implementation of `get_student(...)`?  Address in your answer why it work work, but also think about any potential problems it could cause.  
     
-    > **ANSWER:** _start here_  
+    > **ANSWER:** This alternative implementation correctly allocates storage using malloc(), ensuring the student record persists beyond function execution. This also introduces the risk of memory leaks if the caller fails to free the allocated memory. Frequently allocating and deallocating can lead to memory fragmentation, thereby performance
 
 
 4. Lets take a look at how storage is managed for our simple database. Recall that all student records are stored on disk using the layout of the `student_t` structure (which has a size of 64 bytes).  Lets start with a fresh database by deleting the `student.db` file using the command `rm ./student.db`.  Now that we have an empty database lets add a few students and see what is happening under the covers.  Consider the following sequence of commands:
@@ -102,11 +102,16 @@ Please answer the following questions and submit in your repo for the second ass
 
     - Please explain why the file size reported by the `ls` command was 128 bytes after adding student with ID=1, 256 after adding student with ID=3, and 4160 after adding the student with ID=64? 
 
-        > **ANSWER:** _start here_
+        > **ANSWER:** The file size displayed by ls reflects the logical file size, while du shows actual disk space usage. Sparse files in Linux allow files to have large logical sizes without consuming equivalent physical storage. This occurs because unused regions (holes) are not physically stored on disk, only metadata entries are maintained.
 
     -   Why did the total storage used on the disk remain unchanged when we added the student with ID=1, ID=3, and ID=63, but increased from 4K to 8K when we added the student with ID=64? 
 
-        > **ANSWER:** _start here_
+        > **ANSWER:** 
+        - After adding student ID=1, the file size increased to 128 bytes likely an initial allocation plus metadata.
+
+        - After adding student ID=3, it doubled to 256 bytes, reflecting additional student entries.
+
+        - After adding student ID=64, the size increases to 4160 bytes, likely due to pre-allocated space to accommodate sequential records efficiently.
 
     - Now lets add one more student with a large student ID number  and see what happens:
 
@@ -119,4 +124,4 @@ Please answer the following questions and submit in your repo for the second ass
         ```
         We see from above adding a student with a very large student ID (ID=99999) increased the file size to 6400000 as shown by `ls` but the raw storage only increased to 12K as reported by `du`.  Can provide some insight into why this happened?
 
-        > **ANSWER:**  _start here_
+        > **ANSWER:**  Adding a student with a very large ID caused the logical file size to expand significantly (6400000 bytes as shown by ls). Since most of this space is unallocated (holes in a sparse file), the actual disk storage used (du) only increased slightly to 12K. 

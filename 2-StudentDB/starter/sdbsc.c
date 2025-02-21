@@ -21,6 +21,7 @@
  *            M_ERR_DB_OPEN on error
  *
  */
+
 int open_db(char *dbFile, bool should_truncate)
 {
     // Set permissions: rw-rw----
@@ -32,7 +33,7 @@ int open_db(char *dbFile, bool should_truncate)
     int flags = O_RDWR | O_CREAT;
 
     if (should_truncate)
-        flags += O_TRUNC;
+        flags |= O_TRUNC;
 
     // Now open file
     int fd = open(dbFile, flags, mode);
@@ -43,7 +44,7 @@ int open_db(char *dbFile, bool should_truncate)
         printf(M_ERR_DB_OPEN);
         return ERR_DB_FILE;
     }
-
+    printf("DEBUG: Opened DB file '%s' with FD=%d, Size=%ld bytes\n", dbFile, fd, lseek(fd, 0, SEEK_END));
     return fd;
 }
 
@@ -60,6 +61,7 @@ int open_db(char *dbFile, bool should_truncate)
  *
  *  console:  Does not produce any console I/O used by other functions
  */
+
 int get_student(int fd, int id, student_t *s)
 {
     if (fd == -1 || s == NULL)
@@ -70,7 +72,7 @@ int get_student(int fd, int id, student_t *s)
         return SRCH_NOT_FOUND;
 
     // Calculate direct offset (same as add_student)
-    int offset = (id - MIN_STD_ID) * sizeof(student_t);
+    off_t offset = (id - MIN_STD_ID) * (off_t)STUDENT_RECORD_SIZE;
 
     // Read student record at calculated offset
     student_t student;
@@ -78,7 +80,7 @@ int get_student(int fd, int id, student_t *s)
         return ERR_DB_FILE;
 
     // Check for empty slot (all zeros)
-    student_t empty = {0};
+    student_t empty = EMPTY_STUDENT_RECORD;
     if (memcmp(&student, &empty, sizeof(student_t)) == 0)
         return SRCH_NOT_FOUND;
 
@@ -184,7 +186,6 @@ int add_student(int fd, int id, char *fname, char *lname, int gpa)
 int del_student(int fd, int id)
 {
     student_t student;
-    student_t empty = {0};
 
     // Locate student
     int status = get_student(fd, id, &student);
@@ -193,7 +194,7 @@ int del_student(int fd, int id)
         printf(M_STD_NOT_FND_MSG, id);
         return SRCH_NOT_FOUND;
     }
-    else if (status == ERR_DB_FILE)
+    if (status == ERR_DB_FILE)
     {
         printf(M_ERR_DB_READ);
         return ERR_DB_FILE;
@@ -203,7 +204,7 @@ int del_student(int fd, int id)
     int offset = (id - MIN_STD_ID) * sizeof(student_t);
 
     // Overwrite the student record with an empty record
-    if (pwrite(fd, &empty, sizeof(student_t), offset) != sizeof(student_t))
+    if (pwrite(fd, &EMPTY_STUDENT_RECORD, sizeof(student_t), offset) != sizeof(student_t))
     {
         printf(M_ERR_DB_WRITE);
         return ERR_DB_FILE;
@@ -240,20 +241,16 @@ int del_student(int fd, int id)
 int count_db_records(int fd)
 {
     student_t student;
-    student_t empty = {0};
     int count = 0;
 
     // Reset file offset to the beginning
-    if (lseek(fd, 0, SEEK_SET) == -1)
-    {
-        perror("Error seeking database");
-        return ERR_DB_FILE;
-    }
+    lseek(fd, 0, SEEK_SET);
 
     // Read records one by one
     while (read(fd, &student, sizeof(student_t)) == sizeof(student_t))
     {
-        if (memcmp(&student, &empty, sizeof(student_t)) != 0)
+        printf("DEBUG: Read student ID=%d, GPA=%d\n", student.id, student.gpa);
+        if (memcmp(&student, &EMPTY_STUDENT_RECORD, sizeof(student_t)) != 0)
         {
             count++; // Increment count if record is not empty
         }
@@ -261,6 +258,8 @@ int count_db_records(int fd)
 
     if (count == 0)
     {
+        printf("DEBUG: No valid student records found.\n");
+        printf("DEBUG: Database is empty\n");
         printf(M_DB_EMPTY); // Print "Database Empty" message
     }
     else
@@ -307,27 +306,25 @@ int count_db_records(int fd)
 int print_db(int fd)
 {
     student_t student;
-    student_t empty = {0};
     int count = 0;
 
     // Reset file offset to the beginning
-    lseek(fd, 0, SEEK_SET);
-
-    // Read and check the first student record
-    if (read(fd, &student, sizeof(student_t)) == -1)
-    {
-        perror("Error reading database");
-        return ERR_DB_FILE;
-    }
+    off_t pos = lseek(fd, 0, SEEK_SET);
 
     // Print header only if there are valid records
     int first_valid = 1;
 
     do
     {
-        if (memcmp(&student, &empty, sizeof(student_t)) == 0)
-            continue; // Skip empty records
+        printf("DEBUG: Reading student record at offset %ld\n", pos - sizeof(student_t));
+        printf("DEBUG: Read ID=%d, GPA=%d, First Name='%s', Last Name='%s'\n",
+               student.id, student.gpa, student.fname, student.lname);
 
+        if (memcmp(&student, &EMPTY_STUDENT_RECORD, sizeof(student_t)) == 0)
+        {
+            printf("DEBUG: Empty student record detected.\n");
+            continue; // Skip empty records
+        }
         // Print header before the first valid student
         if (first_valid)
         {
@@ -341,9 +338,9 @@ int print_db(int fd)
         count++;
 
     } while (read(fd, &student, sizeof(student_t)) == sizeof(student_t));
-
     if (count == 0)
     {
+        printf("DEBUG: No students to print.\n");
         printf(M_DB_EMPTY); // Print "Database Empty" message
     }
 
@@ -450,7 +447,6 @@ void print_student(student_t *s)
 int compress_db(int fd)
 {
     student_t student;
-    student_t empty = {0};
 
     // Create a temporary database file
     int temp_fd = open(TMP_DB_FILE, O_WRONLY | O_CREAT | O_TRUNC, 0666);
@@ -471,7 +467,7 @@ int compress_db(int fd)
     // Copy only valid student records
     while (read(fd, &student, sizeof(student_t)) == sizeof(student_t))
     {
-        if (memcmp(&student, &empty, sizeof(student_t)) != 0)
+        if (memcmp(&student, &EMPTY_STUDENT_RECORD, sizeof(student_t)) != 0)
         {
             if (write(temp_fd, &student, sizeof(student_t)) != sizeof(student_t))
             {
