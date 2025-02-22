@@ -132,33 +132,40 @@ void dsh_cd(char *path)
 
 int build_cmd_buff(char *cmd_line, cmd_buff_t *cmd)
 {
-    // char *token;
     cmd->argc = 0;
+    char *ptr = cmd_line;
+    bool in_quotes = false;
+    char temp[SH_CMD_MAX];
+    int temp_index = 0;
 
-    char *token = strtok(cmd_line, " ");
-    while (token != NULL)
+    while (*ptr != '\0')
     {
-        if (token[0] == '"')
+        if (*ptr == '"')
         {
-            token++;
-            char *end = token + strlen(token) - 1;
-            size_t len = strlen(token);
-            if (len > 0 && token[len - 1] == '"')
-                token[len - 1] = '\0';
-            if (*end == '"')
-                *end = '\0';
+            in_quotes = !in_quotes; // Toggle in/out of quotes
+            ptr++;
+            continue;
         }
 
-        // Remove extra spaces from token
-        while (isspace((unsigned char)*token))
-            token++;
-        char *end = token + strlen(token) - 1;
-        while (end > token && isspace((unsigned char)*end))
-            end--;
-        *(end + 1) = '\0';
+        if (!in_quotes && isspace((unsigned char)*ptr))
+        {
+            if (temp_index > 0)
+            {
+                temp[temp_index] = '\0';
+                cmd->argv[cmd->argc++] = strdup(temp);
+                temp_index = 0;
+            }
+            ptr++;
+            continue;
+        }
 
-        cmd->argv[cmd->argc++] = strdup(token);
-        token = strtok(NULL, " ");
+        temp[temp_index++] = *ptr++;
+    }
+
+    if (temp_index > 0)
+    {
+        temp[temp_index] = '\0';
+        cmd->argv[cmd->argc++] = strdup(temp);
     }
 
     cmd->argv[cmd->argc] = NULL;
