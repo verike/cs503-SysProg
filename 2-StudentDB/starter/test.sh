@@ -81,7 +81,7 @@ setup_file() {
     }
 }
 
-@test "Find student 3 in db" {
+@test "Find student 3 in db" {d
     run ./sdbsc -f 3
     
     # Ensure the command ran successfully
