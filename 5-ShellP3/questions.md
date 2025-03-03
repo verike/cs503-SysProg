@@ -8,8 +8,8 @@ _answer here_ : The reason unused pipe input and output ends should be closed is
 
 3. Your shell recognizes built-in commands (cd, exit, dragon). Unlike external commands, built-in commands do not require execvp(). Why is cd implemented as a built-in rather than an external command? What challenges would arise if cd were implemented as an external process?
 
-_answer here_
+_answer here_ : Running cd in a child process would not affect the parent shell, ``cd`` changes the parent shell's working directory, which cannot be done from an external process.
 
 4. Currently, your shell supports a fixed number of piped commands (CMD_MAX). How would you modify your implementation to allow an arbitrary number of piped commands while still handling memory allocation efficiently? What trade-offs would you need to consider?
 
-_answer here_
+_answer here_ : Using dynamic memory allocation for command storage and pipes instead of a fixed array. 
