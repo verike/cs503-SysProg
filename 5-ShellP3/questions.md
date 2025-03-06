@@ -12,4 +12,8 @@ _answer here_ : Running cd in a child process would not affect the parent shell,
 
 4. Currently, your shell supports a fixed number of piped commands (CMD_MAX). How would you modify your implementation to allow an arbitrary number of piped commands while still handling memory allocation efficiently? What trade-offs would you need to consider?
 
-_answer here_ : Using dynamic memory allocation for command storage and pipes instead of a fixed array. 
+_answer here_ : 
+
+`a.` Using dynamic memory allocation for command storage and pipes instead of a fixed array. 
+
+`b.` Increased complexity and memory management, for better scalability.
