@@ -82,6 +82,7 @@ int exec_local_cmd_loop();
 int exec_cmd(cmd_buff_t *cmd);
 int execute_pipeline(command_list_t *clist);
 int parse_command(char *input, command_list_t *clist);
+int free_cmd_list(command_list_t *clist);
 
 // output constants
 #define CMD_OK_HEADER "PARSED COMMAND LINE - TOTAL COMMANDS %d\n"
