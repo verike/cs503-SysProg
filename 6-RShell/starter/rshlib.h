@@ -63,15 +63,16 @@ int boot_server(char *ifaces, int port);
 int stop_server(int svr_socket);
 int send_message_eof(int cli_socket);
 int send_message_string(int cli_socket, char *buff);
-int process_cli_requests(int svr_socket, int is_threaded);
+int process_cli_requests(int svr_socket);
 int exec_client_requests(int cli_socket);
 int rsh_execute_pipeline(int socket_fd, command_list_t *clist);
 
-// SEE COMMENTS IN THE CODE, THESE ARE OPTIONAL IN CASE YOU WANT TO PROVIDE
-// SUPPORT FOR BUILT-IN FUNCTIONS DIFFERENTLY 
 Built_In_Cmds rsh_match_command(const char *input);
 Built_In_Cmds rsh_built_in_cmd(cmd_buff_t *cmd);
 
-// handle_client(void *arg)
+//eliminate from template, for extra credit
+void set_threaded_server(int val);
+int exec_client_thread(int main_socket, int cli_socket);
+void *handle_client(void *arg);
 
 #endif
